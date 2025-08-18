@@ -64,11 +64,9 @@ final class SerieController extends AbstractController
 
 
 
-    #[Route('/detail/{id}', name: '_detail')]
-    public function detail(int $id, SerieRepository $serieRepository): Response
+    #[Route('/detail/{id}', name: '_detail', requirements: ['id' => '\d+'])]
+    public function detail(Serie $serie): Response
     {
-        $serie = $serieRepository->find($id);
-
         if (!$serie) {
             throw $this->createNotFoundException('Pas de série pour cet id');
         }
@@ -77,7 +75,7 @@ final class SerieController extends AbstractController
             'serie' => $serie
         ]);
     }
-    #[Route('/create', name: 'create')]
+    #[Route('/create', name: '_create')]
     public function create (Request $request, EntityManagerInterface $em) : Response {
 
         $serie = new Serie();
@@ -89,6 +87,8 @@ final class SerieController extends AbstractController
             $serie->setDateCreated(new \DateTime());
             $em->persist($serie);
             $em->flush();
+
+            $this->addFlash('success', "une série a été enregistrée");
 
             return $this->redirectToRoute('serie_detail', ['id' => $serie->getId()]);
 
