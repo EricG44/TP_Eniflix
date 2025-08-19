@@ -3,15 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\Serie;
-use App\Entity\Wish;
 use App\Form\SerieType;
 use App\Repository\SerieRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/serie', name: 'serie')]
 final class SerieController extends AbstractController
@@ -68,31 +69,35 @@ final class SerieController extends AbstractController
     #[Route('/detail/{id}', name: '_detail', requirements: ['id' => '\d+'])]
     public function detail(Serie $serie): Response
     {
-        if (!$serie) {
-            throw $this->createNotFoundException('Pas de série pour cet id');
-        }
-
         return $this->render('serie/detail.html.twig', [
             'serie' => $serie
         ]);
     }
-    #[Route('/create', name: '_create')]
-    public function create (Request $request, EntityManagerInterface $em) : Response {
 
+    #[Route('/create', name: '_create')]
+    public function create(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $parameterBag): Response
+    {
         $serie = new Serie();
         $form = $this->createForm(SerieType::class, $serie);
 
         $form->handleRequest($request);
-        if ($form->isSubmitted()) {
 
-            $serie->setDateCreated(new \DateTime());
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $file = $form->get('poster_file')->getData();
+            if ($file instanceof UploadedFile) {
+                $name = $slugger->slug($serie->getName()) . '-' . uniqid() . '.' . $file->guessExtension();
+                $dir = $parameterBag->get('serie')['poster_directory'];
+                $file->move($dir, $name);
+                $serie->setPoster($name);
+            }
+
             $em->persist($serie);
             $em->flush();
 
-            $this->addFlash('success', "une série a été enregistrée");
+            $this->addFlash('success', 'Une série a été enregistrée');
 
             return $this->redirectToRoute('serie_detail', ['id' => $serie->getId()]);
-
         }
 
         return $this->render('serie/edit.html.twig', [
@@ -100,15 +105,32 @@ final class SerieController extends AbstractController
         ]);
     }
 
-
     #[Route('/update/{id}', name: '_update', requirements: ['id' => '\d+'])]
-    public function update(Serie $serie, Request $request, EntityManagerInterface $em): Response
+    public function update(
+        Serie $serie,
+        Request $request,
+        EntityManagerInterface $em,
+        SluggerInterface $slugger,
+        ParameterBagInterface $parameterBag
+    ): Response
     {
         $form = $this->createForm(SerieType::class, $serie);
 
         $form->handleRequest($request);
 
-        if ($form->isSubmitted()) {
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $file = $form->get('poster_file')->getData();
+            if ($file instanceof UploadedFile) {
+                $name = $slugger->slug($serie->getName()) . '-' . uniqid() . '.' . $file->guessExtension();
+                $dir = $parameterBag->get('serie')['poster_directory'];
+                $file->move($dir, $name);
+                if ($serie->getPoster() && file_exists($dir . '/' . $serie->getPoster())) {
+                    unlink($dir . '/' . $serie->getPoster());
+                }
+                $serie->setPoster($name);
+            }
+
             $em->flush();
 
             $this->addFlash('success', 'Une série a été mise à jour');
@@ -135,9 +157,5 @@ final class SerieController extends AbstractController
 
         return $this->redirectToRoute('serie_list');
     }
-
-
-
-
 
 }
