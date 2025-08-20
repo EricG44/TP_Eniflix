@@ -23,7 +23,7 @@ final class SeasonController extends AbstractController
             $em->persist($season);
             $em->flush();
             $this->addFlash('success', 'Une nouvelle saison a été créée');
-            return $this->redirectToRoute('season_detail', ['id' => $season->getSerie()->getId()]);
+            return $this->redirectToRoute('serie_detail', ['id' => $season->getSerie()->getId()]);
         }
 
         return $this->render('season/edit.html.twig', [

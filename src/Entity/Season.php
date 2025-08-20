@@ -112,7 +112,7 @@ class Season
     }
 
     #[ORM\PrePersist]
-    public function setDateCreated(\DateTime $dateCreated): static
+    public function setDateCreated(): static
     {
         $this->dateCreated = new \DateTime();
 
@@ -132,13 +132,11 @@ class Season
     }
 
     #[ORM\PreUpdate]
-    public function onPreUpdate(): static
+    public function onPreUpdate(): void
     {
         $this->setDateModified(new \DateTime());
 
-        return $this;
     }
-
 
 
     public function getSerie(): ?Serie
