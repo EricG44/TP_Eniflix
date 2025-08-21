@@ -25,11 +25,13 @@ class SeasonType extends AbstractType
                 'placeholder' => '-- Choose a Serie --',
                 'class' => Serie::class,
                 'choice_label' => function (Serie $serie) {
-                return sprintf('%s (%s)',$serie->getName(), count($serie ->getSeasons()));
+                    return sprintf('%s (%s)', $serie->getName(), count($serie->getSeasons()));
                 },
                 'query_builder' => function (SerieRepository $repo) {
-                return $repo->createQueryBuilder('s')
-                    ->orderBy('s.name', 'ASC');
+                    return $repo->createQueryBuilder('s')
+                        ->addSelect('seasons')
+                        ->leftJoin('s.seasons', 'seasons')
+                        ->orderBy('s.name', 'ASC');
                 }
             ])
             ->add('submit', SubmitType::class, [])

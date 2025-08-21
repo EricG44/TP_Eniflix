@@ -72,10 +72,10 @@ class SerieRepository extends ServiceEntityRepository
             ->fetchAllAssociative();
     }
 
-    public function getSeriesWithSeasons (int $nbParPage,int $offset): Paginator
+    public function getSeriesWithSeasons(int $nbParPage, int $offset): Paginator
     {
         $q = $this->createQueryBuilder('s')
-        ->orderBy( 's.popularity', 'DESC')
+            ->orderBy('s.popularity', 'DESC')
             ->leftJoin('s.seasons', 'seasons')
             ->addSelect('seasons')
             ->setFirstResult($offset)
@@ -83,8 +83,8 @@ class SerieRepository extends ServiceEntityRepository
             ->getQuery();
 
         return new Paginator($q);
-
     }
+
 
 
 

@@ -40,7 +40,6 @@ class Season
     #[ORM\JoinColumn(nullable: false)]
     private ?Serie $serie = null;
 
-
     public function getId(): ?int
     {
         return $this->id;
@@ -135,9 +134,7 @@ class Season
     public function onPreUpdate(): void
     {
         $this->setDateModified(new \DateTime());
-
     }
-
 
     public function getSerie(): ?Serie
     {
@@ -150,5 +147,4 @@ class Season
 
         return $this;
     }
-
 }
